@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinTraceMamager.Web", "WeixinTraceMamager.Web\WeixinTraceMamager.Web.csproj", "{EAB0A814-2087-4C24-8768-391EE7FDCBDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinTraceMamager.Web.Tests", "WeixinTraceMamager.Web.Tests\WeixinTraceMamager.Web.Tests.csproj", "{CE9C3C06-56EB-4911-B811-AE2C80F6F239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Senparc.Weixin.Plugins.WeixinTraceManager", "Senparc.Weixin.Plugins.WeixinTraceManager\Senparc.Weixin.Plugins.WeixinTraceManager.csproj", "{9470D5AC-493C-4250-8677-8E2473E212F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EAB0A814-2087-4C24-8768-391EE7FDCBDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAB0A814-2087-4C24-8768-391EE7FDCBDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAB0A814-2087-4C24-8768-391EE7FDCBDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAB0A814-2087-4C24-8768-391EE7FDCBDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE9C3C06-56EB-4911-B811-AE2C80F6F239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE9C3C06-56EB-4911-B811-AE2C80F6F239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE9C3C06-56EB-4911-B811-AE2C80F6F239}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE9C3C06-56EB-4911-B811-AE2C80F6F239}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9470D5AC-493C-4250-8677-8E2473E212F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9470D5AC-493C-4250-8677-8E2473E212F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9470D5AC-493C-4250-8677-8E2473E212F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9470D5AC-493C-4250-8677-8E2473E212F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2E5704DF-9C68-442A-B0D8-A3C8AB833EA9}
+	EndGlobalSection
+EndGlobal
