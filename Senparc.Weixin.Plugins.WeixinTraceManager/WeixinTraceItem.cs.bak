@@ -35,10 +35,7 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
         /// 结果
         /// </summary>
         public WeicinTraceItemContent Result { get; set; } = new WeicinTraceItemContent();
-        /// <summary>
-        /// 是否显示详情
-        /// </summary>
-        public bool IsShowDetail { get; set; }
+
     }
 
     public class WeicinTraceItemContent
