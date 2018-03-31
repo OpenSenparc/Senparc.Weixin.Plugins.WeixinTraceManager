@@ -27,19 +27,148 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
             return files.Select(z => Path.GetFileNameWithoutExtension(z).Replace("SenparcWeixinTrace-", "")).OrderByDescending(z => z).ToList();
         }
 
+
+        //在开始新一条日志记录的时候，对上一条日志的结果进行处理
+        static WeixinTraceItem HandData(WeixinTraceItem log, List<String> exMsgList, List<String> exStackList)
+        {
+            //若前一个log为异常，则进行处理
+            if (exMsgList != null && exMsgList.Count > 0)
+            {
+                log.Result.ExceptionMessage = string.Join(Environment.NewLine, exMsgList);
+                log.Result.ExceptionStackTrace = string.Join(Environment.NewLine, exStackList);
+                log.IsShowDetail = true;
+            }
+            else
+            {
+                //若Result 数据 较长，则进行处理
+                string resultOri = log.Result.Result;
+                string postOri = log.Result.PostData;
+                if (!string.IsNullOrEmpty(resultOri) && resultOri.Length > maxDataLength)
+                {
+                    string newResult = LongDataToShort(resultOri);
+                    if (newResult.Length < resultOri.Length)   //处理成功，需要显示详情数据
+                    {
+                        log.Result.Result = newResult;
+                        log.IsShowDetail = true;
+                    }
+                    else
+                    {
+                        log.Result.TotalResult = "";
+                    }
+                }
+                else if (!string.IsNullOrEmpty(postOri) && postOri.Length > maxDataLength)
+                {
+                    string newResult = LongDataToShort(postOri);
+                    if (newResult.Length < postOri.Length)   //处理成功，需要显示详情数据
+                    {
+                        log.Result.PostData = newResult;
+                        log.IsShowDetail = true;
+                    }
+                    else
+                    {
+                        log.Result.TotalResult = "";
+                    }
+                }
+                //else if (string.IsNullOrEmpty(postOri) && string.IsNullOrEmpty(postOri))
+                //{
+
+                //}
+                else if (log.weixinTraceType != WeixinTraceType.Normal)
+                {
+                    log.Result.TotalResult = "";//若是正常的消息，不显示TotalResult
+                }
+
+            }
+            return log;
+        }
+
+        static int maxDataLength = 1000;
+
+
+        //将较长的数据变为较短的数据，省略掉中间的数据
+        static string LongDataToShort(string oriData)
+        {
+            oriData = !string.IsNullOrEmpty(oriData) ? oriData : "";
+            if (oriData.Length <= maxDataLength)
+            {
+                return oriData;
+            }
+
+            //处理   "},{"  和    ","  
+            string splitStr1 = "\"},{\"";    //  "},{"
+            string splitStr2 = "\",\"";    //  ","
+
+            char[] specChar = { '#', '?', '&', '!', '$', '%', '？', '。', '，', '、' };
+
+            var realChar = specChar.Where(a => !oriData.Contains(a)).FirstOrDefault();
+            if (realChar == 0 || realChar == '0')
+            {
+                return oriData;
+            }
+            string[] strArr1 = oriData.Replace(splitStr1, realChar.ToString()).Split(realChar);
+            if (strArr1.Length > 10)
+            {
+                string resultStr = HandDataWithChar(strArr1, splitStr1);
+                if (!string.IsNullOrEmpty(resultStr))
+                {
+                    return resultStr;
+                }
+            }
+
+            string[] strArr2 = oriData.Replace(splitStr2, realChar.ToString()).Split(realChar);
+            if (strArr2.Length > 10)
+            {
+                string resultStr = HandDataWithChar(strArr2, splitStr2);
+                if (!string.IsNullOrEmpty(resultStr))
+                {
+                    return resultStr;
+                }
+            }
+            return oriData;
+        }
+
+
+        //取最前面length条数据和最后面length条数据，length的长度根据最中间那条的长度决定
+        static string HandDataWithChar(string[] strArr1, string splitStr1)
+        {
+            if (strArr1.Length <= 10)
+            {
+                return "";
+            }
+
+            string midStr = strArr1[strArr1.Length / 2];
+            int length = 2;
+            if (midStr.Length < 100)
+            {
+                length = 5;
+            }
+            List<string> resList = new List<string>();
+            for (int i = 0; i < length; i++)
+            {
+                resList.Add(strArr1[i]);
+            }
+            resList.Add("【......省略" + (strArr1.Length - 6).ToString() + "组以（" + splitStr1 + "）分隔的数据......】");
+            for (int i = length; i > 0; i--)
+            {
+                resList.Add(strArr1[strArr1.Length - i]);
+            }
+
+            string resultStr = string.Join(splitStr1, resList);
+            return resultStr;
+        }
+
         /// <summary>
         /// 获取指定日期的日志
         /// </summary>
         /// <returns></returns>
         public static List<WeixinTraceItem> GetAllLogs(string date)
         {
+            date = !string.IsNullOrEmpty(date) ? date :  DateTime.Now.AddDays(0).ToString("yyyyMMdd") ;
             var logFile = Path.Combine(DefaultLogPath, string.Format("SenparcWeixinTrace-{0}.log", date));
-
             if (!File.Exists(logFile))
             {
                 throw new Exception("微信日志文件不存在：" + logFile);
             }
-
             string bakFilename = logFile + ".bak";//备份文件名
             System.IO.File.Delete(bakFilename);
             System.IO.File.Copy(logFile, bakFilename, true);//读取备份文件，以免资源占用
@@ -53,6 +182,9 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                 var readPostData = false;
                 var readResult = false;
                 var readExceptionStackTrace = false;
+                var readExceptionMsg = false;
+                List<String> exMsgList = new List<string>();
+                List<String> exStackList = new List<string>();
 
                 WeixinTraceItem log = new WeixinTraceItem();
                 while ((lineText = sr.ReadLine()) != null)
@@ -61,11 +193,17 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
 
                     lineText = lineText.Trim();
 
+                    if (string.IsNullOrEmpty(lineText))
+                    {
+                        continue;
+                    }
 
                     var startExceptionRegex = Regex.Match(lineText, @"(?<=\[{3})(\S+)(?=Exception(\]{3}))");
 
                     if (startExceptionRegex.Success)
                     {
+                        log = HandData(log, exMsgList, exStackList);
+
                         //一个片段的开始（异常）
                         log = new WeixinTraceItem();
                         logList.Add(log);
@@ -77,6 +215,7 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                         readPostData = false;
                         readResult = false;
                         readExceptionStackTrace = false;
+                        readExceptionMsg = false;
                         continue;
                     }
 
@@ -84,6 +223,8 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                     var startRegex = Regex.Match(lineText, @"(?<=\[{3})(\S+)(?=\]{3})");
                     if (startRegex.Success)
                     {
+                        log = HandData(log, exMsgList, exStackList);
+
                         //一个片段的开始
                         log = new WeixinTraceItem();
                         logList.Add(log);
@@ -93,6 +234,7 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                         readPostData = false;
                         readResult = false;
                         readExceptionStackTrace = false;
+                        readExceptionMsg = false;
                         continue;
                     }
 
@@ -129,7 +271,7 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                     {
                         log.Result.Url = lineText.Replace("URL：", "");
 
-                        if (WeixinTraceType.Normal ==  log.weixinTraceType)
+                        if (WeixinTraceType.Normal == log.weixinTraceType)
                         {
                             log.weixinTraceType = WeixinTraceType.API;
                         }
@@ -151,6 +293,8 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                         }
                     }
 
+
+
                     if (log.IsException)
                     {
                         //异常信息处理
@@ -160,20 +304,49 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
                         }
                         else if (lineText.StartsWith("Message：") || lineText.StartsWith("errcode："))
                         {
-                            log.Result.ExceptionMessage = lineText.Replace("Message：", "");//“errcode：”保留
+                            exMsgList = new List<string>();
+                            lineText = lineText.Replace("Message：", "");
+                            log.Result.ExceptionMessage = lineText;//“errcode：”保留
+                            readExceptionMsg = true;
                         }
                         else if (lineText.StartsWith("StackTrace："))
                         {
+                            readExceptionMsg = false;
                             log.Result.ExceptionStackTrace = lineText.Replace("StackTrace：", "");
                             readExceptionStackTrace = true;
+                            exStackList = new List<string>();
+                            continue;
                         }
                         else if (readExceptionStackTrace)
                         {
                             log.Result.ExceptionStackTrace = "\r\n" + lineText;
                         }
+                        if (!string.IsNullOrEmpty(lineText))
+                        {
+                            if (readExceptionMsg)
+                            {
+                                exMsgList.Add(lineText);
+                            }
+                            if (readExceptionStackTrace)
+                            {
+                                exStackList.Add(lineText);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        readExceptionMsg = false;
+                        readExceptionStackTrace = false;
+                        exMsgList = new List<string>();
+                        exStackList = new List<string>();
                     }
                 }
+                log = HandData(log, exMsgList, exStackList);
             }
+
+            var allThreadNum = logList.Select(a => a.ThreadId).Distinct().Count();
+            var exThreadNum = logList.Where(a => a.IsException).Select(a => a.ThreadId).Distinct().Count(); //发生异常的线程数
+
 
             System.IO.File.Delete(bakFilename);//删除备份文件
 
@@ -181,4 +354,6 @@ namespace Senparc.Weixin.Plugins.WeixinTraceManager
             return logList;
         }
     }
+
+
 }
