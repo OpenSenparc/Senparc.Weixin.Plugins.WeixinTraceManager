@@ -1,15 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
-    <Version>0.1.0</Version>
-    <AssemblyName>Senparc.Weixin.Plugins.WeixinTraceManager</AssemblyName>
-    <RootNamespace>Senparc.Weixin.Plugins.WeixinTraceManager</RootNamespace>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Senparc.Weixin" Version="6.15.10" />
-  </ItemGroup>
-
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <Version>0.1.0</Version>
+        <AssemblyName>Senparc.Weixin.Plugins.WeixinTraceManager</AssemblyName>
+        <RootNamespace>Senparc.Weixin.Plugins.WeixinTraceManager</RootNamespace>
+        <IsTestProject>false</IsTestProject>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IsPackable>true</IsPackable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Company>Senparc</Company>
+        <Product>WeixinTraceManager</Product>
+        <Description>Nuget package of 'WeixinTraceManager' provided by Senparc</Description>
+        <PackageId>Senparc.Weixin.Plugins.WeixinTraceManager</PackageId>
+        <PackageTags>nuget package dotnet csproj dependencies</PackageTags>
+        <TargetFrameworks>net45;netcoreapp2.0</TargetFrameworks>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Senparc.Weixin" Version="6.16.3.2" />
+    </ItemGroup>
 </Project>
